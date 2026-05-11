@@ -1,6 +1,6 @@
 // ─── SUPABASE CONFIG ───────────────────────────────────────────────────────
 const SUPA_URL = 'https://rduqjqlgbpuzyqgrhizm.supabase.co';
-const SUPA_KEY = 'sb_publishable_3gLMJBpq4psNWjBJPBX0nw_FJeqypya';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkdXFqcWxnYnB1enlxZ3JoaXptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgyMjY4MTgsImV4cCI6MjA5MzgwMjgxOH0.As8yVZ7nJoDIG7KDzMX6rBz-y7i9UrD75FuUgZfZN1c';
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_KEY);
 
