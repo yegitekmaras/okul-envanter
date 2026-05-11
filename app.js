@@ -177,13 +177,40 @@ function renderViewPanel(o) {
 function renderFotoView(o, group, gridClass) {
   return group.map(f => {
     const url = o[f.key];
-    return `<div class="photo-slot ${url ? 'filled' : ''}" onclick="uploadFoto(${o.id}, '${f.key}')" title="${f.lbl}">
-      ${url
-        ? `<img src="${url}" alt="${f.lbl}"><button class="photo-del" onclick="deleteFoto(event,${o.id},'${f.key}')">✕</button>`
-        : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
-          <div class="photo-slot-lbl">${f.lbl}</div>`}
-    </div>`;
+    if (url) {
+      return `<div class="photo-slot filled" onclick="openLightbox('${url}','${f.lbl}')" title="${f.lbl} — büyütmek için tıklayın">
+        <img src="${url}" alt="${f.lbl}">
+        <button class="photo-del" onclick="deleteFoto(event,${o.id},'${f.key}')">✕</button>
+      </div>`;
+    } else {
+      return `<div class="photo-slot" onclick="uploadFoto(${o.id}, '${f.key}')" title="${f.lbl} — fotoğraf ekle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><path d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+        <div class="photo-slot-lbl">${f.lbl}</div>
+      </div>`;
+    }
   }).join('');
+}
+
+function openLightbox(url, lbl) {
+  const lb = document.createElement('div');
+  lb.id = 'lightbox';
+  lb.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:zoom-out;padding:20px';
+  lb.innerHTML = `
+    <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px">
+      <a href="${url}" download target="_blank" onclick="event.stopPropagation()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none">⬇ İndir</a>
+      <button onclick="closeLightbox()" style="background:rgba(255,255,255,0.15);color:white;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500;cursor:pointer">✕ Kapat</button>
+    </div>
+    <img src="${url}" alt="${lbl}" style="max-width:95%;max-height:85vh;object-fit:contain;border-radius:10px;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+    <div style="color:rgba(255,255,255,0.7);font-size:13px;margin-top:12px;font-weight:500">${lbl}</div>`;
+  lb.addEventListener('click', e => { if(e.target === lb) closeLightbox(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') closeLightbox(); }, {once:true});
+  document.body.appendChild(lb);
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (lb) { lb.remove(); document.body.style.overflow = ''; }
 }
 
 function renderEditPanel(o) {
