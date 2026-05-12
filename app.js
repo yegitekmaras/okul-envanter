@@ -599,8 +599,27 @@ async function renderIstatistik() {
 }
 
 // ─── PDF ───────────────────────────────────────────────────────────────────
+function chartToImg(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return '';
+  return canvas.toDataURL('image/png');
+}
+
 async function pdfIndir() {
+  // Önce istatistik sayfasını render et (grafikler oluşsun)
+  if (currentPage !== 'istat') {
+    setPage('istat');
+    await new Promise(r => setTimeout(r, 1200));
+  }
+
   showToast('PDF hazırlanıyor...');
+  await new Promise(r => setTimeout(r, 200));
+
+  // Grafikleri resme çevir
+  const imgFaz = chartToImg('chartFaz');
+  const imgInet = chartToImg('chartInet');
+  const imgIlceET = chartToImg('chartIlceET');
+
   const { data: all } = await db.from('okullar').select('*');
   if (!all) return;
   const tarih = new Date().toLocaleDateString('tr-TR');
@@ -626,19 +645,27 @@ async function pdfIndir() {
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
   body{font-family:Arial,sans-serif;margin:30px;font-size:12px;color:#111}
   h1{font-size:20px;color:#1a56db;margin-bottom:3px}.sub{color:#666;font-size:11px}.tarih{color:#888;font-size:10px;margin-bottom:20px}
-  .cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-  .sc{background:#f1f5f9;border-radius:8px;padding:12px 18px;text-align:center;min-width:100px}
-  .sv{font-size:24px;font-weight:700}.sl{font-size:10px;color:#666;margin-top:2px}
+  .cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .sc{background:#f1f5f9;border-radius:8px;padding:10px 16px;text-align:center;min-width:90px}
+  .sv{font-size:22px;font-weight:700}.sl{font-size:10px;color:#666;margin-top:2px}
   h2{font-size:13px;border-bottom:2px solid #1a56db;padding-bottom:5px;margin:18px 0 10px}
+  .charts{display:flex;gap:16px;margin-bottom:20px;align-items:flex-start}
+  .chart-box{flex:1;text-align:center}
+  .chart-box h3{font-size:11px;color:#666;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .chart-box img{width:100%;max-width:280px;height:auto}
+  .chart-full{margin-bottom:20px;text-align:center}
+  .chart-full h3{font-size:11px;color:#666;margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .chart-full img{width:100%;max-width:700px;height:auto}
   .fc{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
   .fc div{background:#f1f5f9;border-radius:7px;padding:10px 16px;text-align:center;min-width:80px}
   .fv{font-size:20px;font-weight:700}.fl{font-size:10px;color:#666;margin-top:2px}
-  table{width:100%;border-collapse:collapse;font-size:11px}
-  th{background:#1a56db;color:#fff;padding:7px 9px;text-align:left}
-  td{padding:6px 9px;border-bottom:1px solid #e5e7eb}
+  table{width:100%;border-collapse:collapse;font-size:10px}
+  th{background:#1a56db;color:#fff;padding:6px 8px;text-align:left;font-size:10px}
+  td{padding:5px 8px;border-bottom:1px solid #e5e7eb}
   tr:nth-child(even) td{background:#f8fafc}
   tfoot td{background:#eff6ff;font-weight:700}
   .footer{margin-top:24px;border-top:1px solid #e5e7eb;padding-top:8px;font-size:9px;color:#999;text-align:center}
+  @media print{body{margin:15px}}
   </style></head><body>
   <h1>Kahramanmaraş Etkileşimli Tahta Envanter Raporu</h1>
   <div class="sub">YEĞİTEK Teknoloji Altyapı Takip Sistemi</div>
@@ -651,6 +678,14 @@ async function pdfIndir() {
     <div class="sc"><div class="sv" style="color:#0d9488">${bilisimVar}</div><div class="sl">Bilişim Sınıfı</div></div>
     <div class="sc"><div class="sv" style="color:#d97706">${yenilikciVar}</div><div class="sl">Yenilikçi Sınıf</div></div>
   </div>
+  ${imgFaz || imgInet ? `
+  <h2>Grafikler</h2>
+  <div class="charts">
+    ${imgFaz ? `<div class="chart-box"><h3>Faz Dağılımı</h3><img src="${imgFaz}"></div>` : ''}
+    ${imgInet ? `<div class="chart-box"><h3>İnternet Türü</h3><img src="${imgInet}"></div>` : ''}
+  </div>` : ''}
+  ${imgIlceET ? `
+  <div class="chart-full"><h3>İlçe Bazında ET Sayısı</h3><img src="${imgIlceET}"></div>` : ''}
   <h2>Faz Dağılımı (İl Geneli)</h2>
   <div class="fc">
     <div><div class="fv" style="color:#6366f1">${f1t}</div><div class="fl">Faz 1</div></div>
@@ -670,7 +705,7 @@ async function pdfIndir() {
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const w = window.open(url, '_blank');
-  if (w) setTimeout(() => w.print(), 800);
+  if (w) setTimeout(() => w.print(), 1000);
 }
 
 // ─── SİL ───────────────────────────────────────────────────────────────────
