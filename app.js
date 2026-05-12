@@ -137,7 +137,10 @@ function renderViewPanel(o) {
         <div class="detail-title">${o.okul_adi}</div>
         <div class="detail-sub">${o.ilce} · ${o.kurum_turu}</div>
       </div>
-      <button class="btn-primary btn-sm" onclick="showDetail(${o.id}, true)">Güncelle</button>
+      <div style="display:flex;gap:6px">
+        <button class="btn-danger btn-sm" onclick="okulSil(${o.id}, '${o.okul_adi}')">🗑 Sil</button>
+        <button class="btn-primary btn-sm" onclick="showDetail(${o.id}, true)">Güncelle</button>
+      </div>
     </div>
 
     <div class="section-hdr">Kurum Bilgileri</div>
@@ -509,6 +512,8 @@ async function renderIstatistik() {
 
   const inetSay = {adsl:0, fatih_vpn:0, gsm:0};
   all.forEach(o => { if (o.internet_turu && inetSay[o.internet_turu] !== undefined) inetSay[o.internet_turu]++; });
+  const bilisimVar = all.filter(o => o.bilisim_sinifi === 'var').length;
+  const yenilikciVar = all.filter(o => o.yenilikci_sinif === 'var').length;
 
   const ilceler = [...new Set(all.map(o => o.ilce))].sort();
   const ilceET = ilceler.map(i => all.filter(o => o.ilce===i).reduce((a,o) => a+totalTahta(o), 0));
@@ -518,11 +523,15 @@ async function renderIstatistik() {
   content.innerHTML = `
   <div class="card" style="padding:14px;margin-bottom:12px">
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:12px">İl Geneli Özet</div>
-    <div class="istat-summary">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
       <div class="istat-s-card"><div class="istat-s-val" style="color:#1a56db">${all.length}</div><div class="istat-s-lbl">Toplam Okul</div></div>
       <div class="istat-s-card"><div class="istat-s-val" style="color:#7c3aed">${totalET}</div><div class="istat-s-lbl">Toplam ET</div></div>
       <div class="istat-s-card"><div class="istat-s-val" style="color:#16a34a">${inetOkul}</div><div class="istat-s-lbl">İnternet Olan</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
       <div class="istat-s-card"><div class="istat-s-val" style="color:#ea580c">${tahtalı}</div><div class="istat-s-lbl">ET'li Okul</div></div>
+      <div class="istat-s-card"><div class="istat-s-val" style="color:#0d9488">${bilisimVar}</div><div class="istat-s-lbl">Bilişim Sınıfı</div></div>
+      <div class="istat-s-card"><div class="istat-s-val" style="color:#d97706">${yenilikciVar}</div><div class="istat-s-lbl">Yenilikçi Sınıf</div></div>
     </div>
   </div>
 
@@ -565,11 +574,15 @@ async function renderIstatistik() {
       const okullar = all.filter(o => o.ilce===ilce);
       const etT = okullar.reduce((a,o) => a+totalTahta(o), 0);
       const inetT = okullar.filter(o => o.internet_turu && o.internet_turu !== '').length;
+      const bilisimT = okullar.filter(o => o.bilisim_sinifi === 'var').length;
+      const yenilikciT = okullar.filter(o => o.yenilikci_sinif === 'var').length;
       return `<div class="ilce-card">
         <div class="ilce-card-title">${ilce}</div>
         <div class="ilce-mini-row"><div class="ilce-mini-k">Okul</div><div class="ilce-mini-v">${okullar.length}</div></div>
         <div class="ilce-mini-row"><div class="ilce-mini-k">Toplam ET</div><div class="ilce-mini-v" style="color:#7c3aed">${etT}</div></div>
         <div class="ilce-mini-row"><div class="ilce-mini-k">İnternet</div><div class="ilce-mini-v" style="color:#16a34a">${inetT} okul</div></div>
+        <div class="ilce-mini-row"><div class="ilce-mini-k">Bilişim Sınıfı</div><div class="ilce-mini-v" style="color:#0d9488">${bilisimT}</div></div>
+        <div class="ilce-mini-row"><div class="ilce-mini-k">Yenilikçi Sınıf</div><div class="ilce-mini-v" style="color:#d97706">${yenilikciT}</div></div>
       </div>`;
     }).join('')}
   </div>`;
@@ -594,6 +607,8 @@ async function pdfIndir() {
   const totalET = all.reduce((a,o) => a+totalTahta(o), 0);
   const inetOkul = all.filter(o => o.internet_turu && o.internet_turu !== '').length;
   const tahtalı = all.filter(o => o.tahta_durumu === 'var').length;
+  const bilisimVar = all.filter(o => o.bilisim_sinifi === 'var').length;
+  const yenilikciVar = all.filter(o => o.yenilikci_sinif === 'var').length;
   const f1t=all.reduce((a,o)=>a+(o.faz1||0),0), f2t=all.reduce((a,o)=>a+(o.faz2||0),0);
   const f3t=all.reduce((a,o)=>a+(o.faz3||0),0), f4t=all.reduce((a,o)=>a+(o.faz4||0),0);
   const ilceler = [...new Set(all.map(o => o.ilce))].sort();
@@ -601,9 +616,11 @@ async function pdfIndir() {
     const ol = all.filter(o=>o.ilce===ilce);
     const et=ol.reduce((a,o)=>a+totalTahta(o),0);
     const inet=ol.filter(o=>o.internet_turu&&o.internet_turu!=='').length;
+    const bil=ol.filter(o=>o.bilisim_sinifi==='var').length;
+    const yen=ol.filter(o=>o.yenilikci_sinif==='var').length;
     const f1=ol.reduce((a,o)=>a+(o.faz1||0),0),f2=ol.reduce((a,o)=>a+(o.faz2||0),0);
     const f3=ol.reduce((a,o)=>a+(o.faz3||0),0),f4=ol.reduce((a,o)=>a+(o.faz4||0),0);
-    return `<tr><td>${ilce}</td><td>${ol.length}</td><td><b>${et}</b></td><td>${f1}</td><td>${f2}</td><td>${f3}</td><td>${f4}</td><td>${inet}</td></tr>`;
+    return `<tr><td>${ilce}</td><td>${ol.length}</td><td><b>${et}</b></td><td>${f1}</td><td>${f2}</td><td>${f3}</td><td>${f4}</td><td>${inet}</td><td>${bil}</td><td>${yen}</td></tr>`;
   }).join('');
 
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
@@ -631,6 +648,8 @@ async function pdfIndir() {
     <div class="sc"><div class="sv" style="color:#7c3aed">${totalET}</div><div class="sl">Toplam ET</div></div>
     <div class="sc"><div class="sv" style="color:#16a34a">${inetOkul}</div><div class="sl">İnternet Olan</div></div>
     <div class="sc"><div class="sv" style="color:#ea580c">${tahtalı}</div><div class="sl">ET'li Okul</div></div>
+    <div class="sc"><div class="sv" style="color:#0d9488">${bilisimVar}</div><div class="sl">Bilişim Sınıfı</div></div>
+    <div class="sc"><div class="sv" style="color:#d97706">${yenilikciVar}</div><div class="sl">Yenilikçi Sınıf</div></div>
   </div>
   <h2>Faz Dağılımı (İl Geneli)</h2>
   <div class="fc">
@@ -641,9 +660,9 @@ async function pdfIndir() {
     <div><div class="fv" style="color:#1a56db">${totalET}</div><div class="fl">Toplam</div></div>
   </div>
   <h2>İlçe Bazında İstatistikler</h2>
-  <table><thead><tr><th>İlçe</th><th>Okul</th><th>Toplam ET</th><th>Faz1</th><th>Faz2</th><th>Faz3</th><th>Faz4</th><th>İnternet</th></tr></thead>
+  <table><thead><tr><th>İlçe</th><th>Okul</th><th>Toplam ET</th><th>Faz1</th><th>Faz2</th><th>Faz3</th><th>Faz4</th><th>İnternet</th><th>Bilişim</th><th>Yenilikçi</th></tr></thead>
   <tbody>${rows}</tbody>
-  <tfoot><tr><td>TOPLAM</td><td>${all.length}</td><td>${totalET}</td><td>${f1t}</td><td>${f2t}</td><td>${f3t}</td><td>${f4t}</td><td>${inetOkul}</td></tr></tfoot>
+  <tfoot><tr><td>TOPLAM</td><td>${all.length}</td><td>${totalET}</td><td>${f1t}</td><td>${f2t}</td><td>${f3t}</td><td>${f4t}</td><td>${inetOkul}</td><td>${bilisimVar}</td><td>${yenilikciVar}</td></tr></tfoot>
   </table>
   <div class="footer">Kahramanmaraş Milli Eğitim Müdürlüğü · YEĞİTEK · ${tarih}</div>
   </body></html>`;
@@ -652,6 +671,36 @@ async function pdfIndir() {
   const url = URL.createObjectURL(blob);
   const w = window.open(url, '_blank');
   if (w) setTimeout(() => w.print(), 800);
+}
+
+// ─── SİL ───────────────────────────────────────────────────────────────────
+async function okulSil(id, ad) {
+  const onay = confirm(`"${ad}" okulunu silmek istediğinize emin misiniz?\n\nBu işlem geri alınamaz!`);
+  if (!onay) return;
+
+  showToast('Siliniyor...');
+
+  // Önce fotoğrafları storage'dan sil
+  const { data: o } = await db.from('okullar').select('*').eq('id', id).single();
+  if (o) {
+    const fotoKeys = ['foto_dis','foto_koridor','foto_sinif1','foto_sinif2','foto_sistem','foto_bilisim','foto_yenilikci'];
+    for (const key of fotoKeys) {
+      if (o[key]) {
+        const path = o[key].split('/okul_foto/')[1];
+        if (path) await db.storage.from('okul_foto').remove([path]);
+      }
+    }
+  }
+
+  // Sonra kaydı sil
+  const { error } = await db.from('okullar').delete().eq('id', id);
+  if (error) { showToast('Silme hatası: ' + error.message); return; }
+
+  showToast('✓ Okul silindi');
+  document.getElementById('detailPanel').style.display = 'none';
+  activeId = null;
+  await loadAllStats();
+  await listele();
 }
 
 // ─── HELPERS ───────────────────────────────────────────────────────────────
