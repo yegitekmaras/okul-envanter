@@ -65,9 +65,20 @@ function renderTopStats(data) {
 
 // ─── PAGE NAV ──────────────────────────────────────────────────────────────
 function setPage(p) {
+  currentPage = p;
   document.getElementById('pageOkul').style.display = p === 'okul' ? '' : 'none';
   document.getElementById('pageIstat').style.display = p === 'istat' ? '' : 'none';
-  document.getElementById('btnIstat').style.background = p === 'istat' ? 'rgba(255,255,255,0.3)' : '';
+  // Ana Sayfa butonu
+  const btnHome = document.getElementById('btnAnasayfa');
+  if (btnHome) {
+    btnHome.className = p === 'okul' ? 'btn-anasayfa active' : 'btn-anasayfa';
+  }
+  // İstatistik butonu
+  const btnIstat = document.getElementById('btnIstat');
+  if (btnIstat) {
+    btnIstat.style.background = p === 'istat' ? 'rgba(255,255,255,0.35)' : '';
+    btnIstat.style.fontWeight = p === 'istat' ? '700' : '';
+  }
   if (p === 'istat') renderIstatistik();
 }
 
